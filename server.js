@@ -1,4 +1,4 @@
-import { createServer, preview, build, transformWithOxc } from 'vite';
+import { createServer, preview, build, transformWithEsbuild } from 'vite';
 import react from '@vitejs/plugin-react';
 import os from 'os';
 import fs from 'fs';
@@ -8,7 +8,6 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Force the process CWD to be the directory of this script
 process.chdir(__dirname);
 
 function getNetworkAddress() {
@@ -32,9 +31,9 @@ async function startServer() {
     name: 'treat-js-files-as-jsx',
     enforce: 'pre',
     async transform(code, id) {
-      if (!id.match(/src\/.*\.js$/)) return null;
-      return transformWithOxc(code, id, {
-        lang: 'jsx',
+      if (!id.match(/src\/.*\.[jt]sx?$/)) return null;
+      return transformWithEsbuild(code, id, {
+        loader: 'jsx',
       });
     },
   };
@@ -93,11 +92,6 @@ async function startServer() {
           entries: ['index.html'],
           esbuildOptions: {
             loader: {
-              '.js': 'jsx',
-            },
-          },
-          rolldownOptions: {
-            moduleTypes: {
               '.js': 'jsx',
             },
           },
