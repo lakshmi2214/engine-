@@ -32,7 +32,7 @@ async function startServer() {
     name: 'treat-js-files-as-jsx',
     enforce: 'pre',
     async transform(code, id) {
-      if (!id.match(/src\/.*\.js$/)) return null;
+      if (!id.match(/src\/.*\.js(\?.*)?$/)) return null;
       return transformWithOxc(code, id, {
         lang: 'jsx',
       });
@@ -64,19 +64,24 @@ async function startServer() {
 
     let server;
     let port;
+    const defaultPort = Number(process.env.PORT) || 3000;
 
     if (isPreview) {
       server = await preview({
         root: __dirname,
         configFile: false,
+        build: {
+          outDir: 'build',
+        },
         preview: {
-          port: 3000,
+          port: defaultPort,
           host: true,
+          allowedHosts: true,
         },
         logLevel: 'warn',
       });
       const address = server.httpServer.address();
-      port = typeof address === 'string' ? 3000 : address.port;
+      port = typeof address === 'string' ? defaultPort : address.port;
     } else {
       server = await createServer({
         root: __dirname,
@@ -86,7 +91,7 @@ async function startServer() {
           react(),
         ],
         server: {
-          port: 3000,
+          port: defaultPort,
           host: true,
         },
         optimizeDeps: {
@@ -106,7 +111,7 @@ async function startServer() {
       });
       await server.listen();
       const address = server.httpServer.address();
-      port = typeof address === 'string' ? 3000 : address.port;
+      port = typeof address === 'string' ? defaultPort : address.port;
     }
 
     const networkIp = getNetworkAddress();
@@ -133,6 +138,7 @@ async function startServer() {
 
   } catch (error) {
     console.error('\x1b[31mFailed to run server/build:\x1b[0m', error);
+    process.exit(1);
   }
 }
 
